@@ -11,15 +11,21 @@ import Selectfunction from './Selectfunction';
 
 
 export default function Dashboard(props) {
+    var tempstr='';
+    
     const arr1=['user_id' , 'catalog' , 'username' ,'shops.email','shopify_plan','updated_at','created_at','shop_url']
     var x =[];
+    const [filterSelect, setFilterSelect]=useState(['','','','','','','','','']);
+    const[filterTextName,setFilterTextName]=useState(['','','','','','','','','','']);
+    const [filtertextinput,setFiltertextinput]=useState(['','','','','','','','','','']);
     const[loading , setLoading]=useState(false)
     const[filter , setFilter]=useState([])
     const[filterpara1 , setFilterpara1]=useState()
-    const[filterpara2 , setFilterpara2]=useState()
+    const[filterpara2 , setFilterpara2]=useState(1)
     const[filterpara3 , setFilterpara3]=useState()
     const[flag , setFlag]=useState(false)
-
+    var appendvalue=[];
+    const[appendstate , setAppendstate]=useState([])
     const buttonref= useRef([])
     const from = useRef()
     const to = useRef();
@@ -53,24 +59,58 @@ export default function Dashboard(props) {
         from.current = to.current - selected;
     },[])
     const getData=(val , i)=>{
+        // f1.push(arr1[i])
+        // f2.push(val)
+        let f1=filterSelect;
+        f1[i]=val
+        let f2=filterTextName;
+        f2[i]=arr1[i]
+        // filterSelect[i]=val;
+        setFilterSelect([...f1])
+        setFilterTextName([...f2])
+        // filterTextName[i]=arr1[i]
+        
          x[i] = val;
          setFilter(x)
          setFilterpara1(arr1[i])
          setFilterpara2(val)
+        //  console.log(x)
+        // console.log(f1)
+        // console.log(filterSelect)
+        // console.log(filterTextName)
+     
     }
+  
     const inputvalue=(e)=>{
-        setFilterpara1(arr1[e.target.id])
+        let x = arr1[Number(e.target.id)]
+         setFilterpara1(x)
          setFilterpara3(e.target.value)
          setFlag(true)
+         let f3=filtertextinput;
+         f3[Number(e.target.id)]=e.target.value
+         setFiltertextinput([...f3])
+        //  filtertextinput[Number(e.target.id)]=e.target.value
+        //  console.log(filtertextinput)
+        
+        //  console.log(appendvalue)
     }
-    useEffect(()=>{
     const handler2= async ()=>{
+     
+        // console.log(appendvalue)
         setLoading(true)
-        const response2 = await axios(` https://fbapi.sellernext.com/frontend/admin/getAllUsers?activePage=${count1}&count=${selected}&filter[${filterpara1}][${filterpara2}]=${filterpara3}`, {
+        filterSelect.map((d , index)=>{
+        //    console.log(filterSelect)
+            if(d!=''){
+                tempstr+=`&filter[${arr1[index]}][${d}]=${filtertextinput[index]}`
+            }
+            
+        })
+        const response2 = await axios(` https://fbapi.sellernext.com/frontend/admin/getAllUsers?activePage=${count1}&count=${selected}${tempstr}`, {
         headers: {
                 authorization: sessionStorage.getItem('token')
             }
         })
+        
         setUser(response2.data.data.count)
         response2.data.data.rows.map((d) => {
             rows.push([d.user_id, d.catalog, d.username, d.email, d.shopify_plan, d.updated_at, d.created_at, d.shop_url])
@@ -79,7 +119,18 @@ export default function Dashboard(props) {
        setLoading(false)
        setFlag(false)
     }
-        handler2();
+    useEffect(()=>{
+        // appendvalue.push(filterpara1 , filterpara2 , filterpara3)
+        // setAppendstate([...appendstate] , appendvalue)
+        // console.log(appendstate)
+        // console.log(appendvalue)
+        const timer= setTimeout(
+            handler2,1000)
+          return(()=>{
+            clearTimeout(timer)
+          })
+   
+        // handler2();
        
     },[flag])
 
@@ -99,7 +150,7 @@ export default function Dashboard(props) {
     var rows = [
         [ 
             [   <Selectfunction getData={getData}  ind={0}/>,
-                 <input  placeholder="user_id" autoComplete="off" onChange={inputvalue} ref={el => buttonref.current[0] = el} id="0"/> 
+                 <input  placeholder="user_id" autoComplete="off" onKeyUp={inputvalue} ref={el => buttonref.current[0] = el} id="0"/> 
             ] ,
             [   <Selectfunction getData={getData}  ind={1}/>,
                  <input  placeholder="Catalog" autoComplete="off" onChange={inputvalue} ref={el => buttonref.current[0] = el} id="1"/> 
@@ -158,7 +209,7 @@ export default function Dashboard(props) {
            setLoading(false)
         
        }
-       console.log("1")
+    //    console.log("1")
 
         handler1();
         to.current = selected * count1;
@@ -183,7 +234,9 @@ export default function Dashboard(props) {
            
 //    setFlag(false)
 //     },[flag])
-
+console.log(filterSelect)
+console.log(filterTextName)
+console.log(filtertextinput)
     return (<>
     <div id="navbar_div_id">DASHBOARD</div>
         <div id="dashboard_products_main_div_id">
